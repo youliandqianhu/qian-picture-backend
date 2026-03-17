@@ -24,7 +24,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,url,thumbnailUrl,name,
+        id,url,thumbnailUrl,spaceId,name,
         introduction,category,tags,
         picSize,picWidth,picHeight,
         picScale,picFormat,userId,

@@ -3,10 +3,7 @@ package com.qianhu.qianpicturebackend.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.qianhu.qianpicturebackend.model.dto.picture.PictureQueryRequest;
-import com.qianhu.qianpicturebackend.model.dto.picture.PictureReviewRequest;
-import com.qianhu.qianpicturebackend.model.dto.picture.PictureUploadByBatchRequest;
-import com.qianhu.qianpicturebackend.model.dto.picture.PictureUploadRequest;
+import com.qianhu.qianpicturebackend.model.dto.picture.*;
 import com.qianhu.qianpicturebackend.model.entity.Picture;
 import com.qianhu.qianpicturebackend.model.entity.User;
 import com.qianhu.qianpicturebackend.model.vo.PictureVO;
@@ -89,6 +86,27 @@ public interface PictureService extends IService<Picture> {
      * @param loginUser
      */
     public void fillReviewParams(Picture picture, User loginUser);
+
+    /**
+     * 删除图片
+     * @param pictureId
+     * @param loginUser
+     */
+    public void deletePicture(long pictureId, User loginUser);
+
+    /**
+     * 更新图片
+     * @param pictureEditRequest
+     * @param loginUser
+     */
+    public void editPicture(PictureEditRequest pictureEditRequest, User loginUser);
+
+    /**
+     * 检查图片权限
+     * @param loginUser
+     * @param picture
+     */
+    public void checkPictureAuth(User loginUser, Picture picture);
 
     /**
      * 异步清除图片文件
