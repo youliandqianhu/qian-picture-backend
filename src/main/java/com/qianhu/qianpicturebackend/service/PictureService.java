@@ -10,6 +10,7 @@ import com.qianhu.qianpicturebackend.model.vo.PictureVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
 * @author hxz
@@ -107,6 +108,15 @@ public interface PictureService extends IService<Picture> {
      * @param picture
      */
     public void checkPictureAuth(User loginUser, Picture picture);
+
+    /**
+     * 根据颜色搜索图片
+     * @param spaceId
+     * @param picColor
+     * @param loginUser
+     * @return
+     */
+    public List<PictureVO> searchPictureByColor(Long spaceId, String picColor, User loginUser);
 
     /**
      * 异步清除图片文件

@@ -8,7 +8,6 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.qianhu.qianpicturebackend.annotation.AuthCheck;
 import com.qianhu.qianpicturebackend.api.imagesearch.ImageSearchApiFacade;
 import com.qianhu.qianpicturebackend.api.imagesearch.model.ImageSearchResult;
-import com.qianhu.qianpicturebackend.api.imagesearch.model.SearchPictureByPictureRequest;
 import com.qianhu.qianpicturebackend.common.BaseResponse;
 import com.qianhu.qianpicturebackend.common.DeleteRequest;
 import com.qianhu.qianpicturebackend.common.ResultUtils;
@@ -316,6 +315,22 @@ public class PictureController {
         return ResultUtils.success(pictureVOPage);
     }
 
+    /**
+     * 根据颜色查询
+     * @param searchPictureByColorRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/search/color")
+    public BaseResponse<List<PictureVO>> searchPictureByColor(@RequestBody SearchPictureByColorRequest searchPictureByColorRequest, HttpServletRequest request) {
+        ThrowUtils.throwIf(searchPictureByColorRequest == null, ErrorCode.PARAMS_ERROR);
+        String picColor = searchPictureByColorRequest.getPicColor();
+        Long spaceId = searchPictureByColorRequest.getSpaceId();
+        User loginUser = userService.getLoginUser(request);
+        List<PictureVO> result = pictureService.searchPictureByColor(spaceId, picColor, loginUser);
+        return ResultUtils.success(result);
+    }
+
 
     /**
      * 编辑图片（给用户使用）
@@ -372,6 +387,8 @@ public class PictureController {
         List<ImageSearchResult> imageSearchResults = ImageSearchApiFacade.searchImage(oldPicture.getUrl());
         return ResultUtils.success(imageSearchResults);
     }
+
+
 
 
     @PostMapping("/review")

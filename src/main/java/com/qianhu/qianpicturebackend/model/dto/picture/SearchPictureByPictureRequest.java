@@ -1,4 +1,4 @@
-package com.qianhu.qianpicturebackend.api.imagesearch.model;
+package com.qianhu.qianpicturebackend.model.dto.picture;
 
 import lombok.Data;
 
