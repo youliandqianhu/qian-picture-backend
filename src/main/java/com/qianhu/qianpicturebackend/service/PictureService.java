@@ -123,4 +123,11 @@ public interface PictureService extends IService<Picture> {
      * @param oldPicture
      */
     public void clearPictureFile(Picture oldPicture);
+
+    /**
+     * 批量更新图片
+     * @param pictureEditByBatchRequest
+     * @param loginUser
+     */
+    public void editPictureByBatch(PictureEditByBatchRequest pictureEditByBatchRequest, User loginUser);
 }

@@ -6,6 +6,7 @@ import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qianhu.qianpicturebackend.exception.BusinessException;
@@ -40,6 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileUrlResource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -49,6 +51,8 @@ import java.awt.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 /**
@@ -311,7 +315,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         String reviewMessage = pictureQueryRequest.getReviewMessage();
         Long reviewerId = pictureQueryRequest.getReviewerId();
         Long spaceId = pictureQueryRequest.getSpaceId();
-        Boolean nullSpaceId = pictureQueryRequest.getNullSpaceId();
+        boolean nullSpaceId = pictureQueryRequest.isNullSpaceId();
         Date startEditTime = pictureQueryRequest.getStartEditTime();
         Date endEditTime = pictureQueryRequest.getEndEditTime();
         // 从多字段中搜索
@@ -582,6 +586,106 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         boolean result = this.updateById(picture);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void editPictureByBatch(PictureEditByBatchRequest pictureEditByBatchRequest, User loginUser){
+        List<Long> pictureIdList = pictureEditByBatchRequest.getPictureIdList();
+        Long spaceId = pictureEditByBatchRequest.getSpaceId();
+        String category = pictureEditByBatchRequest.getCategory();
+        List<String> tags = pictureEditByBatchRequest.getTags();
+        // 参数校验
+        ThrowUtils.throwIf(spaceId == null || CollectionUtils.isEmpty(pictureIdList), ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(StrUtil.isBlank(category) || CollectionUtils.isEmpty(tags), ErrorCode.PARAMS_ERROR);
+        // 校验空间
+        Space space = spaceService.getById(spaceId);
+        if (!loginUser.getId().equals(space.getUserId())){
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "空间不存在");
+        }
+        // 获取图片
+        List<Picture> pictureList = this.lambdaQuery()
+                .select(Picture::getId, Picture::getSpaceId)
+                .eq(Picture::getSpaceId, spaceId)
+                .in(Picture::getId, pictureIdList)
+                .list();
+        // 检查数据
+        if (pictureList.isEmpty()){
+            return;
+        }
+
+        // 更新图片（简陋版，下面有更强的优化方案）
+        pictureList.forEach(picture -> {
+            if (StrUtil.isNotBlank(category)){
+                picture.setCategory(category);
+            }
+            if (CollUtil.isNotEmpty(tags)){
+                picture.setTags(JSONUtil.toJsonStr(tags));
+            }
+        });
+
+//        由于用户要处理的数据量不大，上述代码已经能够满足求。但如果要处理大量数据，可以使用线程池 + 分批 + 并发进行优化
+//        @Resource
+//        private ThreadPoolExecutor customExecutor;
+//        TODO 线程池 + 分批 + 并发优化方案
+//        TODO 分批处理避免长事务
+//        int batchSize = 100;
+//        List<CompletableFuture<Void>> futures = new ArrayList<>();
+//        for (int i = 0; i < pictureList.size(); i += batchSize) {
+//            List<Picture> batch = pictureList.subList(i, Math.min(i + batchSize, pictureList.size()));
+//
+//            // 异步处理每批数据
+//            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+//                batch.forEach(picture -> {
+//                    // 编辑分类和标签
+//                    if (pictureEditByBatchRequest.getCategory() != null) {
+//                        picture.setCategory(pictureEditByBatchRequest.getCategory());
+//                    }
+//                    if (pictureEditByBatchRequest.getTags() != null) {
+//                        picture.setTags(String.join(",", pictureEditByBatchRequest.getTags()));
+//                    }
+//                });
+//                boolean result = this.updateBatchById(batch);
+//                if (!result) {
+//                    throw new BusinessException(ErrorCode.OPERATION_ERROR, "批量更新图片失败");
+//                }
+//            }, customExecutor);
+//
+//            futures.add(future);
+//        }
+//        等待所有任务完成
+//        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        // 批量重命名
+        String nameRule = pictureEditByBatchRequest.getNameRule();
+        fillPictureWithNameRule(pictureList, nameRule);
+
+        // 批量更新
+        boolean result = this.updateBatchById(pictureList);
+        ThrowUtils.throwIf(!result, ErrorCode.SYSTEM_ERROR);
+    }
+
+    /**
+     * nameRule 格式：图片{序号}
+     *
+     * @param pictureList
+     * @param nameRule
+     */
+    private void fillPictureWithNameRule(List<Picture> pictureList, String nameRule) {
+        if (CollUtil.isEmpty(pictureList) || StrUtil.isBlank(nameRule)) {
+            return;
+        }
+        long count = 1;
+        try {
+            for (Picture picture : pictureList) {
+                String pictureName = nameRule.replaceAll("\\{序号}", String.valueOf(count++));
+                picture.setName(pictureName);
+            }
+        } catch (Exception e) {
+            log.error("名称解析错误", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "名称解析错误");
+        }
+    }
+
 
 }
 
