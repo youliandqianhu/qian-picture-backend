@@ -31,6 +31,33 @@ spring:
     store-type: redis
     # session 30 天过期
     timeout: 2592000
+  # 空间图片分表
+  shardingsphere:
+    datasource:
+      names: qian_hu_picture
+      qian_hu_picture:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/qian_hu_picture?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+        username: root
+        password: 123456
+    rules:
+      sharding:
+        tables:
+          picture:
+            actual-data-nodes: qian_hu_picture.picture  # 动态分表
+            table-strategy:
+              standard:
+                sharding-column: spaceId
+                sharding-algorithm-name: picture_sharding_algorithm  # 使用自定义分片算法
+        sharding-algorithms:
+          picture_sharding_algorithm:
+            type: CLASS_BASED
+            props:
+              strategy: standard
+              algorithmClassName: com.qianhu.qianpicturebackend.manager.sharding.PictureShardingAlgorithm
+    props:
+      sql-show: true
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false
@@ -41,6 +68,7 @@ mybatis-plus:
       logic-delete-field: isDelete # 全局逻辑删除的实体字段名
       logic-delete-value: 1 # 逻辑已删除值（默认为 1）
       logic-not-delete-value: 0 # 逻辑未删除值（默认为 0）
+    enable-sql-runner: true
 # 接口文档配置
 knife4j:
   enable: true

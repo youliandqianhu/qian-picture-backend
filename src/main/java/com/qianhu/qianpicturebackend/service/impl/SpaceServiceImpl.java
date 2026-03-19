@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qianhu.qianpicturebackend.exception.BusinessException;
 import com.qianhu.qianpicturebackend.exception.ErrorCode;
 import com.qianhu.qianpicturebackend.exception.ThrowUtils;
+import com.qianhu.qianpicturebackend.manager.sharding.DynamicShardingManager;
 import com.qianhu.qianpicturebackend.mapper.SpaceMapper;
 import com.qianhu.qianpicturebackend.model.dto.space.SpaceAddRequest;
 import com.qianhu.qianpicturebackend.model.dto.space.SpaceQueryRequest;
@@ -26,6 +27,7 @@ import com.qianhu.qianpicturebackend.model.vo.UserVO;
 import com.qianhu.qianpicturebackend.service.SpaceService;
 import com.qianhu.qianpicturebackend.service.SpaceUserService;
 import com.qianhu.qianpicturebackend.service.UserService;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -54,6 +56,11 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
 
     @Resource
     private SpaceUserService spaceUserService;
+
+//    TODO 暂时放弃分库分表。
+//    @Resource
+//    @Lazy
+//    private DynamicShardingManager dynamicShardingManager;
 
 
     @Override
@@ -108,6 +115,10 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space>
                     result = spaceUserService.save(spaceUser);
                     ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR,"创建团队成员记录失败");
                 }
+                // 创建分表
+                // TODO 暂时放弃分库分表。
+                // TODO 实际上存在很多问题，比如我原先的公共图库spaceId都为null,加了分库分表后spaceId是不能为null的,也就是我空间的增删改查都要求spaceId有个默认值(0就行)，然后之后的判断也要判断spaceId为0，比较麻烦
+                // dynamicShardingManager.createSpacePictureTable(space);
                 // 返回新写入的数据id
                 return space.getId();
             });
