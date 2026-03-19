@@ -103,9 +103,10 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
             // 判断空间是否存在
             Space space = spaceService.getById(spaceId);
             ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
-            if (!loginUser.getId().equals(space.getUserId())) {
-                throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "没有空间权限");
-            }
+            // TODO 以改用Sa-Token实现权限校验
+//            if (!loginUser.getId().equals(space.getUserId())) {
+//                throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "没有空间权限");
+//            }
             // 校验额度
             if (space.getTotalCount() >= space.getMaxCount()) {
                 throw new BusinessException(ErrorCode.OPERATION_ERROR, "空间条数不足");
@@ -131,9 +132,10 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
             pictureId = pictureUploadRequest.getId();
             // 添加权限校验
             Picture oldPicture = this.getById(pictureId);
-            if (!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)){
-                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有权限修改");
-            }
+            // TODO 以改用Sa-Token实现权限校验
+//            if (!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)){
+//                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有权限修改");
+//            }
             // 校验空间是否一样
             if (spaceId == null){
                 if (oldPicture.getSpaceId() != null){
@@ -547,7 +549,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         Picture oldPicture = this.getById(pictureId);
         ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
         // 校验删除权限
-        this.checkPictureAuth(loginUser,oldPicture);
+        // TODO 以改用Sa-Token实现权限校验 this.checkPictureAuth(loginUser,oldPicture);
         // 操作数据库--事务
         transactionTemplate.execute(status -> {
             // 操作数据库
@@ -576,7 +578,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         Picture oldPicture = this.getById(id);
         ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
         // 校验权限
-        this.checkPictureAuth(loginUser, oldPicture);
+        // TODO 以改用Sa-Token实现权限校验 this.checkPictureAuth(loginUser, oldPicture);
         // 在此处将实体类和 DTO 进行转换
         Picture picture = new Picture();
         BeanUtils.copyProperties(pictureEditRequest, picture);
@@ -700,7 +702,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         Picture picture = Optional.ofNullable(this.getById(pictureId))
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_ERROR));
         // 权限校验
-        checkPictureAuth(loginUser, picture);
+        // TODO 以改用Sa-Token实现权限校验 checkPictureAuth(loginUser, picture);
         // 构造请求参数
         CreateOutPaintingTaskRequest taskRequest = new CreateOutPaintingTaskRequest();
         CreateOutPaintingTaskRequest.Input input = new CreateOutPaintingTaskRequest.Input();

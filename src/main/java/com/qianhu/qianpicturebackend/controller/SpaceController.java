@@ -9,6 +9,7 @@ import com.qianhu.qianpicturebackend.constant.UserConstant;
 import com.qianhu.qianpicturebackend.exception.BusinessException;
 import com.qianhu.qianpicturebackend.exception.ErrorCode;
 import com.qianhu.qianpicturebackend.exception.ThrowUtils;
+import com.qianhu.qianpicturebackend.manager.auth.SpaceUserAuthManager;
 import com.qianhu.qianpicturebackend.model.dto.space.*;
 import com.qianhu.qianpicturebackend.model.dto.space.analyze.SpaceTagAnalyzeRequest;
 import com.qianhu.qianpicturebackend.model.entity.Picture;
@@ -21,6 +22,7 @@ import com.qianhu.qianpicturebackend.service.SpaceService;
 import com.qianhu.qianpicturebackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -40,6 +42,9 @@ public class SpaceController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private SpaceUserAuthManager spaceUserAuthManager;
 
     /**
      * 添加空间
@@ -118,8 +123,13 @@ public class SpaceController {
         // 查询数据库
         Space space = spaceService.getById(id);
         ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR);
+        // 获取权限
+        User loginUser = userService.getLoginUser(request);
+        List<String> permissionList = spaceUserAuthManager.getPermissionList(space, loginUser);
         // 获取封装类
-        return ResultUtils.success(spaceService.getSpaceVO(space, request));
+        SpaceVO spaceVO = spaceService.getSpaceVO(space, request);
+        spaceVO.setPermissionList(permissionList);
+        return ResultUtils.success(spaceVO);
     }
 
     /**
