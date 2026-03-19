@@ -10,11 +10,13 @@ import com.qianhu.qianpicturebackend.exception.BusinessException;
 import com.qianhu.qianpicturebackend.exception.ErrorCode;
 import com.qianhu.qianpicturebackend.exception.ThrowUtils;
 import com.qianhu.qianpicturebackend.model.dto.space.*;
+import com.qianhu.qianpicturebackend.model.dto.space.analyze.SpaceTagAnalyzeRequest;
 import com.qianhu.qianpicturebackend.model.entity.Picture;
 import com.qianhu.qianpicturebackend.model.entity.Space;
 import com.qianhu.qianpicturebackend.model.entity.User;
 import com.qianhu.qianpicturebackend.model.enums.SpaceLevelEnum;
 import com.qianhu.qianpicturebackend.model.vo.SpaceVO;
+import com.qianhu.qianpicturebackend.model.vo.space.analyze.SpaceTagAnalyzeResponse;
 import com.qianhu.qianpicturebackend.service.SpaceService;
 import com.qianhu.qianpicturebackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -63,9 +65,7 @@ public class SpaceController {
         // 判断是否存在
         Space oldSpace = spaceService.getById(id);
         // 仅本人或管理员可删除
-        if (!oldSpace.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
+        spaceService.checkSpaceAuth(loginUser, oldSpace);
         // 操作数据库
         boolean result = spaceService.removeById(id);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
@@ -176,9 +176,7 @@ public class SpaceController {
         Space oldSpace = spaceService.getById(id);
         ThrowUtils.throwIf(oldSpace == null, ErrorCode.NOT_FOUND_ERROR);
         // 仅本人或管理员可编辑
-        if (!oldSpace.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
+        spaceService.checkSpaceAuth(loginUser, oldSpace);
         // 操作数据库
         boolean result = spaceService.updateById(space);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
