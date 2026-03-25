@@ -32,19 +32,14 @@
 
 ## 🛠️ 技术选型
 
-### 后端架构
-
-| **Spring Boot框架** |
-
-| **MySQL数据库 + MyBatis Plus** |
-
-| **Redis分布式缓存 + Caffeine 本地缓存** |
-
-| **WebSocket 双向通信** |
-
-| **腾讯云 COS对象存储** |
-
-| **Sa-Token 权限控制** |
+| 分类 | 技术 |
+|------|------|
+| 基础框架 | Spring Boot |
+| 数据层 | MySQL + MyBatis Plus |
+| 缓存 | Redis + Caffeine |
+| 实时通信 | WebSocket |
+| 存储 | 腾讯云 COS |
+| 权限控制 | Sa-Token |
 
 ## 💡 项目亮点
 
